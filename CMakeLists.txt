@@ -12,7 +12,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # Make IDE friendly
-target_sources(${PROJECT_NAME} INTERFACE invertible-cdf.hpp)
+target_sources(${PROJECT_NAME} INTERFACE invertible-cdf.hpp include/)
 
 # Benchmark and test code. Only add_subdirectory() if
 #   this code is used standalone, i.e., not as a FetchContent()
