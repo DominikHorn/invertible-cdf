@@ -10,6 +10,10 @@ template <class KeyType>
 struct Coord {
   KeyType x;
   double y;
+
+  friend bool operator==(const Coord<KeyType>& a, const Coord<KeyType>& b) {
+    return a.x == b.x && a.y == b.y;
+  }
 };
 
 struct SearchBound {

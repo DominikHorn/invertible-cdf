@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
+
+#include "include/rs/builder.h"
+#include "include/rs/radix_spline.h"
 
 namespace invertible_cdf {
 
@@ -11,6 +15,9 @@ namespace invertible_cdf {
  */
 template <class Key>
 class InvertibleCDF {
+  /// Cdf model, i.e., f(x)
+  _internal::RadixSpline<Key> rs_;
+
  public:
   /**
    * Construct without fitting the CDF right away. Use `fit()`
@@ -38,7 +45,18 @@ class InvertibleCDF {
    * @param end past-the-end iterator for the sequence
    */
   template <class It>
-  void fit(const It &begin, const It &end);  // TODO(dominik): unimplemented
+  void fit(const It &begin, const It &end) {
+    // since we want to support arbitrarily ordered data we copy & sort
+    std::vector<Key> keys(begin, end);
+    std::sort(keys.begin(), keys.end());
+
+    // use RadixSpline's builder interface for construction
+    const auto min = keys.front();
+    const auto max = keys.back();
+    _internal::RadixSplineBuilder<Key> rsb(min, max);
+    for (const auto &key : keys) rsb.AddKey(key);
+    rs_ = rsb.Finalize();
+  }
 
   /**
    * Retrieves the approximate position for a given key, i.e., computes f(x)
@@ -58,5 +76,19 @@ class InvertibleCDF {
    * @returns minimum `Key` associated with `pos`
    */
   Key key_for_pos(const size_t &pos);  // TODO(dominik): unimplemented
+
+  /**
+   * Equality compares two InvertibleCDF instances `a` and `b`.
+   *
+   * @param a
+   * @param b
+   *
+   * @returns true iff a and b match, defined as having exactly the same
+   *          internal learned cdf parameters
+   */
+  friend bool operator==(const InvertibleCDF<Key> &a,
+                         const InvertibleCDF<Key> &b) {
+    return a.rs_ == b.rs_;
+  }
 };
 }  // namespace invertible_cdf

@@ -70,6 +70,13 @@ class RadixSpline {
            spline_points_.size() * sizeof(Coord<KeyType>);
   }
 
+  friend bool operator==(const RadixSpline<KeyType>& a,
+                         const RadixSpline<KeyType>& b) {
+    return a.min_key_ == b.min_key_ && a.max_key_ == b.max_key_ &&
+           a.max_error_ == b.max_error_ && a.radix_table_ == b.radix_table_ &&
+           a.spline_points_ == b.spline_points_;
+  }
+
  protected:
   // Returns the index of the spline point that marks the end of the spline
   // segment that contains the `key`: `key` ∈ (spline[index - 1],

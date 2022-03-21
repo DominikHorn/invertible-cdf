@@ -11,10 +11,10 @@ namespace invertible_cdf::_internal {
 
 // Allows building a `RadixSpline` in a single pass over sorted data.
 template <class KeyType>
-class Builder {
+class RadixSplineBuilder {
  public:
-  Builder(KeyType min_key, KeyType max_key, size_t num_radix_bits = 18,
-          size_t max_error = 32)
+  RadixSplineBuilder(KeyType min_key, KeyType max_key,
+                     size_t num_radix_bits = 18, size_t max_error = 32)
       : min_key_(min_key),
         max_key_(max_key),
         num_radix_bits_(num_radix_bits),
