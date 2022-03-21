@@ -6,6 +6,7 @@
 #include <limits>
 #include <random>
 
+const size_t test_dataset_size = 100'000;
 using Key = std::uint64_t;
 using KeyProps = std::numeric_limits<Key>;
 
@@ -54,7 +55,7 @@ std::vector<Key> generate_sorted_dataset(size_t dataset_size,
 /// result, especially across different construction interfaces
 TEST(ICDF, BuildReproducible) {
   // obtain a random test dataset
-  auto keys = generate_sorted_dataset(1'000'000);
+  auto keys = generate_sorted_dataset(test_dataset_size);
 
   // don't fit() `a` right away
   invertible_cdf::InvertibleCDF<Key> icdf_a;
@@ -78,7 +79,7 @@ TEST(ICDF, BuildReproducible) {
 /// PREREQUISITE: `BuildReproducible` must be working!
 TEST(ICDF, Equality) {
   // obtain a random test dataset
-  auto keys = generate_sorted_dataset(1'000'000);
+  auto keys = generate_sorted_dataset(test_dataset_size);
 
   invertible_cdf::InvertibleCDF<Key> icdf_a, icdf_b, icdf_c;
 
@@ -102,7 +103,7 @@ TEST(ICDF, Equality) {
 /// Test building on unsorted data
 TEST(ICDF, BuildUnsorted) {
   // obtain a random test dataset
-  auto keys = generate_unsorted_dataset(1'000'000);
+  auto keys = generate_unsorted_dataset(test_dataset_size);
 
   // index unsorted data
   invertible_cdf::InvertibleCDF<Key> unsorted_icdf;
@@ -116,4 +117,23 @@ TEST(ICDF, BuildUnsorted) {
   // if everything is implemented correctly, unsorted_icdf
   // and sorted_icdf are identical
   EXPECT_EQ(sorted_icdf, unsorted_icdf);
+}
+
+/// Test obtaining positions for keys
+TEST(ICDF, PosForKey) {
+  // obtain a random test dataset
+  auto keys = generate_sorted_dataset(test_dataset_size);
+
+  // index data
+  invertible_cdf::InvertibleCDF<Key> icdf;
+  icdf.fit(keys.begin(), keys.end());
+
+  // invariant: For all keys, their search bound must contain them.
+  for (size_t i = 0; i < keys.size(); i++) {
+    const auto& key = keys[i];
+    const auto bounds = icdf.pos_for_key(key);
+
+    EXPECT_LE(bounds.min, i);
+    EXPECT_GE(bounds.max, i);
+  }
 }

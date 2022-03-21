@@ -9,6 +9,16 @@
 namespace invertible_cdf {
 
 /**
+ * Bounds represent a [min, max) interval in a certain domain
+ *
+ * @tparam T domain, e.g., std::size_t
+ */
+template <class T>
+struct Bounds {
+  T min, max;
+};
+
+/**
  * InvertibleCDF implements a reversable CDF function,
  * i.e., it is not only able to map from keys to positions
  * but also from positions to min-keys.
@@ -63,9 +73,12 @@ class InvertibleCDF {
    *
    * @param key
    *
-   * @returns position associated with `Key`
+   * @returns bounds for positiosn associated with `key`
    */
-  size_t pos_for_key(const Key &key);  // TODO(dominik): unimplemented
+  Bounds<size_t> pos_for_key(const Key &key) const {
+    const auto search_bounds = rs_.GetSearchBound(key);
+    return {.min = search_bounds.begin, .max = search_bounds.end};
+  }
 
   /**
    * Retrieves the approximate key for a given position, i.e., computes
@@ -73,9 +86,9 @@ class InvertibleCDF {
    *
    * @param pos
    *
-   * @returns minimum `Key` associated with `pos`
+   * @returns bounds for keys associated with `pos`
    */
-  Key key_for_pos(const size_t &pos);  // TODO(dominik): unimplemented
+  Key key_for_pos(const size_t &pos) const;  // TODO(dominik): unimplemented
 
   /**
    * Equality compares two InvertibleCDF instances `a` and `b`.
