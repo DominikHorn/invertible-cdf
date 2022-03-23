@@ -137,3 +137,27 @@ TEST(ICDF, PosForKey) {
     EXPECT_GE(bounds.max, i);
   }
 }
+
+/// Test obtaining keys for positions
+TEST(ICDF, KeyForPos) {
+  // obtain a random test dataset
+  auto keys = generate_sorted_dataset(test_dataset_size);
+
+  // index data
+  invertible_cdf::InvertibleCDF<Key> icdf;
+  icdf.fit(keys.begin(), keys.end());
+
+  // invariant: For positions, their keys must map to them.
+  for (size_t i = 0; i < keys.size(); i++) {
+    const auto& key = keys[i];
+    const auto bounds = icdf.key_for_pos(i);
+
+    if (bounds.max < key) {
+      const auto bounds2 = icdf.key_for_pos(i);
+      std::cout << ":) " << bounds2.max << std::endl;
+    }
+
+    EXPECT_LE(bounds.min, key);
+    EXPECT_GE(bounds.max, key);
+  }
+}

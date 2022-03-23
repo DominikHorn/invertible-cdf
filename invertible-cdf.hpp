@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
+#include <limits>
+#include <optional>
 #include <vector>
 
 #include "include/rs/builder.h"
@@ -86,9 +89,26 @@ class InvertibleCDF {
    *
    * @param pos
    *
-   * @returns bounds for keys associated with `pos`
+   * @returns bounds for keys associated with `pos`, if `\pos` in range indexed
+   * by cdf. Otherwise `{ .min = Key::max(), .max = Key::max() }`
    */
-  Key key_for_pos(const size_t &pos) const;  // TODO(dominik): unimplemented
+  Bounds<Key> key_for_pos(const size_t &pos) const {
+    using KeyLims = std::numeric_limits<Key>;
+
+    // rename to enhance below code's readability
+    const auto &spline = rs_.spline_points_;
+
+    // find first segment with seg.y <= pos and return it's key (x)
+    for (auto curr_segment = spline.begin() + 1, prev_segment = spline.begin();
+         curr_segment < spline.end(); prev_segment++, curr_segment++) {
+      // return as soon as we find the position's lower bound
+      if (curr_segment->y >= pos) {
+        return {.min = prev_segment->x, .max = curr_segment->x};
+      }
+    }
+
+    return {.min = spline.back().x, .max = KeyLims::max()};
+  }
 
   /**
    * Equality compares two InvertibleCDF instances `a` and `b`.
