@@ -26,7 +26,7 @@ struct Bounds {
  * i.e., it is not only able to map from keys to positions
  * but also from positions to min-keys.
  */
-template <class Key>
+template <class Key, size_t max_error = 16>
 class InvertibleCDF {
   /// Cdf model, i.e., f(x)
   _internal::RadixSpline<Key> rs_;
@@ -66,7 +66,7 @@ class InvertibleCDF {
     // use RadixSpline's builder interface for construction
     const auto min = keys.front();
     const auto max = keys.back();
-    _internal::RadixSplineBuilder<Key> rsb(min, max);
+    _internal::RadixSplineBuilder<Key> rsb(min, max, 1, max_error);
     for (const auto &key : keys) rsb.AddKey(key);
     rs_ = rsb.Finalize();
   }

@@ -8,7 +8,7 @@
 #include "common.h"
 
 namespace invertible_cdf {
-template <class Key>
+template <class Key, size_t max_error>
 class InvertibleCDF;
 
 namespace _internal {
@@ -117,7 +117,7 @@ class RadixSpline {
   template <typename>
   friend class Serializer;
 
-  template <class>
+  template <class, size_t>
   friend class invertible_cdf::InvertibleCDF;
 };
 }  // namespace _internal
