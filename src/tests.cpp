@@ -8,7 +8,7 @@
 
 const size_t test_dataset_size = 100'000;
 using Key = std::uint64_t;
-using KeyProps = std::numeric_limits<Key>;
+using KeyLims = std::numeric_limits<Key>;
 
 /**
  * Generates an unsorted, seeded, uniform random dataset over the entire key
@@ -25,7 +25,7 @@ std::vector<Key> generate_unsorted_dataset(size_t dataset_size,
 
   // distribute over entire key domain. Note that this might cause issues with
   // implementations that rely on sentinel values etc. Adress if necessary
-  std::uniform_int_distribution<Key> dist(KeyProps::min(), KeyProps::max());
+  std::uniform_int_distribution<Key> dist(KeyLims::min(), KeyLims::max());
 
   // reserve + push_back appears to be the fastest way to achieve this
   std::vector<Key> res;
@@ -138,8 +138,8 @@ TEST(ICDF, PosForKey) {
   }
 }
 
-/// Test obtaining keys for positions
-TEST(ICDF, KeyForPos) {
+/// Test obtaining keys for positions gives correct bounds
+TEST(ICDF, KeyForPosBounds) {
   // obtain a random test dataset
   auto keys = generate_sorted_dataset(test_dataset_size);
 
@@ -152,12 +152,29 @@ TEST(ICDF, KeyForPos) {
     const auto& key = keys[i];
     const auto bounds = icdf.key_for_pos(i);
 
-    if (bounds.max < key) {
-      const auto bounds2 = icdf.key_for_pos(i);
-      std::cout << ":) " << bounds2.max << std::endl;
-    }
-
     EXPECT_LE(bounds.min, key);
     EXPECT_GE(bounds.max, key);
+  }
+}
+
+/// Test that keys for pos are monotonically increasing
+TEST(ICDF, KeyForPosMonotone) {
+  // obtain a random test dataset
+  auto keys = generate_sorted_dataset(test_dataset_size);
+
+  // index data
+  invertible_cdf::InvertibleCDF<Key> icdf;
+  icdf.fit(keys.begin(), keys.end());
+
+  // invariant: For positions, their keys must map to them.
+  invertible_cdf::Bounds<Key> last_bounds{KeyLims::min(), KeyLims::min()};
+  for (size_t i = 0; i < keys.size(); i++) {
+    const auto bounds = icdf.key_for_pos(i);
+
+    EXPECT_LE(bounds.min, bounds.max);
+    EXPECT_LE(last_bounds.min, bounds.min);
+    EXPECT_LE(last_bounds.max, bounds.max);
+
+    last_bounds = bounds;
   }
 }
