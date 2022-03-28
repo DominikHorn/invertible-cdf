@@ -33,3 +33,8 @@ target_link_libraries(${TEST_TARGET} PRIVATE ${PROJECT_NAME} ${GOOGLETEST_LIBRAR
 
 # enable ctest support (i.e., test discovery)
 gtest_discover_tests(${TEST_TARGET})
+
+# ==== Books Experiment target ====
+set(BOOKS_EXPERIMENT icdf_books_experiment)
+add_executable(${BOOKS_EXPERIMENT} books-experiment.cpp)
+target_link_libraries(${BOOKS_EXPERIMENT} PRIVATE ${PROJECT_NAME})
