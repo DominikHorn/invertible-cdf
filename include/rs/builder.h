@@ -55,7 +55,7 @@ class RadixSplineBuilder {
 
     return RadixSpline<KeyType>(min_key_, max_key_, curr_num_keys_,
                                 num_radix_bits_, num_shift_bits_, max_error_,
-                                std::move(radix_table_),
+                                std::move(radix_table_), std::move(pos_table_),
                                 std::move(spline_points_));
   }
 
@@ -82,6 +82,9 @@ class RadixSplineBuilder {
     assert(position == 0 || position > prev_position_);
 
     PossiblyAddKeyToSpline(key, position);
+
+    assert(static_cast<size_t>(position) == pos_table_.size());
+    pos_table_.push_back(spline_points_.size() - 1);
 
     ++curr_num_keys_;
     prev_key_ = key;
@@ -227,6 +230,7 @@ class RadixSplineBuilder {
   const size_t max_error_;
 
   std::vector<uint32_t> radix_table_;
+  std::vector<uint32_t> pos_table_;
   std::vector<Coord<KeyType>> spline_points_;
 
   size_t curr_num_keys_;

@@ -94,31 +94,27 @@ class InvertibleCDF {
    */
   Bounds<Key> key_for_pos(const size_t &pos) const {
     using KeyLims = std::numeric_limits<Key>;
-    using PosLims = std::numeric_limits<size_t>;
     using SegmentIter = typename decltype(rs_.spline_points_)::const_iterator;
 
     // rename to enhance below code's readability
     const auto &spline = rs_.spline_points_;
 
-    // find first segment with seg.y <= pos and return it's key (x)
-    auto min_seg = spline.begin() + 1, max_seg = spline.end();
-
+    // min and max pos with error bound taken into account. Our true
+    // key could map to any position in this range -> we need to
+    // extrapolate from this raneg
     const auto min_pos = pos - std::min(max_error, pos);
-    const auto max_pos = pos + std::min(PosLims::max() - pos, max_error);
+    const auto max_pos =
+        pos + std::min(rs_.pos_table_.size() - 1 - pos, max_error);
 
-    for (auto curr_segment = spline.begin() + 1; curr_segment < spline.end();
-         curr_segment++) {
-      const auto prev_segment = curr_segment - 1;
+    // find first segment with seg.y <= pos and return it's key (x)
+    const auto min_seg = spline.begin() + rs_.pos_table_[min_pos];
+    const auto max_seg = spline.begin() + rs_.pos_table_[max_pos];
 
-      if (prev_segment->y <= min_pos && curr_segment->y > min_pos) {
-        min_seg = curr_segment;
-      }
-
-      if (prev_segment->y <= max_pos && curr_segment->y > max_pos) {
-        max_seg = curr_segment;
-        break;
-      }
-    }
+    assert(min_seg >= spline.begin());
+    assert(min_seg < spline.end());
+    assert(max_seg >= spline.begin());
+    assert(max_seg < spline.end());
+    assert(min_seg <= max_seg);
 
     // found segment for our pos
     const auto inverted_fma = [](const SegmentIter &up, const SegmentIter &down,
@@ -133,19 +129,15 @@ class InvertibleCDF {
     };
 
     const double pred_min =
-        std::floor(inverted_fma(min_seg, min_seg - 1, min_pos));
-    assert(pred_min >= (min_seg - 1)->x);
-    assert(pred_min <= min_seg->x);
+        std::floor(inverted_fma(min_seg + 1, min_seg, min_pos));
 
     // key was never inserted during fit(), i.e., is 'beyond' our spline
-    if (max_seg == spline.end()) {
+    if (max_seg + 1 >= spline.end()) {
       return {.min = static_cast<Key>(pred_min), .max = KeyLims::max()};
     }
 
     const double pred_max =
-        std::ceil(inverted_fma(max_seg, max_seg - 1, max_pos));
-    assert(pred_max >= (max_seg - 1)->x);
-    assert(pred_max <= max_seg->x);
+        std::ceil(inverted_fma(max_seg + 1, max_seg, max_pos));
 
     return {.min = static_cast<Key>(pred_min),
             .max = static_cast<Key>(pred_max)};

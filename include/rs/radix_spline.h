@@ -22,6 +22,7 @@ class RadixSpline {
   RadixSpline(KeyType min_key, KeyType max_key, size_t num_keys,
               size_t num_radix_bits, size_t num_shift_bits, size_t max_error,
               std::vector<uint32_t> radix_table,
+              std::vector<uint32_t> pos_table,
               std::vector<Coord<KeyType>> spline_points)
       : min_key_(min_key),
         max_key_(max_key),
@@ -30,6 +31,7 @@ class RadixSpline {
         num_shift_bits_(num_shift_bits),
         max_error_(max_error),
         radix_table_(std::move(radix_table)),
+        pos_table_(std::move(pos_table)),
         spline_points_(std::move(spline_points)) {}
 
   // Returns the estimated position of `key`.
@@ -112,6 +114,7 @@ class RadixSpline {
   size_t max_error_;
 
   std::vector<uint32_t> radix_table_;
+  std::vector<uint32_t> pos_table_;  // TODO(dominik): elias fano monotone list
   std::vector<Coord<KeyType>> spline_points_;
 
   template <typename>
