@@ -46,28 +46,30 @@ class RadixSplineBuilder {
     assert(curr_num_keys_ == 0 || prev_key_ == max_key_);
 
     // Ensure that `prev_key_` (== `max_key_`) is last key on spline.
-    if (curr_num_keys_ > 0 && spline_points_.back().x != prev_key_)
+    if (curr_num_keys_ > 0 && spline_points_.back().x != prev_key_) {
       AddKeyToSpline(prev_key_, prev_position_);
+    }
 
     // Maybe even size the radix based on max key right from the start
     FinalizeRadixTable();
 
-    return RadixSpline<KeyType>(
-        min_key_, max_key_, curr_num_keys_, num_radix_bits_, num_shift_bits_,
-        max_error_, std::move(radix_table_), std::move(spline_points_));
+    return RadixSpline<KeyType>(min_key_, max_key_, curr_num_keys_,
+                                num_radix_bits_, num_shift_bits_, max_error_,
+                                std::move(radix_table_),
+                                std::move(spline_points_));
   }
 
  private:
   // Returns the number of shift bits based on the `diff` between the largest
   // and the smallest key. KeyType == uint32_t.
   static size_t GetNumShiftBits(uint32_t diff, size_t num_radix_bits) {
-    const uint32_t clz = __builtin_clz(diff);
+    const auto clz = static_cast<uint32_t>(__builtin_clz(diff));
     if ((32 - clz) < num_radix_bits) return 0;
     return 32 - num_radix_bits - clz;
   }
   // KeyType == uint64_t.
   static size_t GetNumShiftBits(uint64_t diff, size_t num_radix_bits) {
-    const uint32_t clzl = __builtin_clzl(diff);
+    const auto clzl = static_cast<uint32_t>(__builtin_clzl(diff));
     if ((64 - clzl) < num_radix_bits) return 0;
     return 64 - num_radix_bits - clzl;
   }
@@ -97,10 +99,11 @@ class RadixSplineBuilder {
   static Orientation ComputeOrientation(const double dx1, const double dy1,
                                         const double dx2, const double dy2) {
     const double expr = std::fma(dy1, dx2, -std::fma(dy2, dx1, 0));
-    if (expr > precision)
+    if (expr > precision) {
       return Orientation::CW;
-    else if (expr < -precision)
+    } else if (expr < -precision) {
       return Orientation::CCW;
+    }
     return Orientation::Collinear;
   };
 
@@ -202,8 +205,9 @@ class RadixSplineBuilder {
     const KeyType curr_prefix = (key - min_key_) >> num_shift_bits_;
     if (curr_prefix != prev_prefix_) {
       const uint32_t curr_index = spline_points_.size() - 1;
-      for (KeyType prefix = prev_prefix_ + 1; prefix <= curr_prefix; ++prefix)
+      for (KeyType prefix = prev_prefix_ + 1; prefix <= curr_prefix; ++prefix) {
         radix_table_[prefix] = curr_index;
+      }
       prev_prefix_ = curr_prefix;
     }
   }
@@ -211,8 +215,9 @@ class RadixSplineBuilder {
   void FinalizeRadixTable() {
     ++prev_prefix_;
     const uint32_t num_spline_points = spline_points_.size();
-    for (; prev_prefix_ < radix_table_.size(); ++prev_prefix_)
+    for (; prev_prefix_ < radix_table_.size(); ++prev_prefix_) {
       radix_table_[prev_prefix_] = num_spline_points;
+    }
   }
 
   const KeyType min_key_;
