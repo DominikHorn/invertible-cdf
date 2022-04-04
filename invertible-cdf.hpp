@@ -89,7 +89,7 @@ class InvertibleCDF {
    *
    * @param pos
    *
-   * @returns bounds for keys associated with `pos`, if `\pos` in range indexed
+   * @returns bounds for keys associated with `pos`, if `pos` in range indexed
    * by cdf. Otherwise `{ .min = Key::max(), .max = Key::max() }`
    */
   Bounds<Key> key_for_pos(const size_t &pos) const {
