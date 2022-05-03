@@ -101,7 +101,7 @@ class InvertibleCDF {
 
     // min and max pos with error bound taken into account. Our true
     // key could map to any position in this range -> we need to
-    // extrapolate from this raneg
+    // extrapolate from this range
     const auto min_pos = pos - std::min(max_error, pos);
     const auto max_pos =
         pos + std::min(rs_.pos_table_.size() - 1 - pos, max_error);
