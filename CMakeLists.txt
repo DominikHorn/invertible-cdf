@@ -14,6 +14,10 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 # Make IDE friendly
 target_sources(${PROJECT_NAME} INTERFACE invertible-cdf.hpp include/)
 
+# Dependencies
+include(${PROJECT_SOURCE_DIR}/thirdparty/boost.cmake)
+target_link_libraries(${PROJECT_NAME} INTERFACE Boost::dynamic_bitset)
+
 # Benchmark and test code. Only add_subdirectory() if
 #   this code is used standalone, i.e., not as a FetchContent()
 #   or other dependency. Standalone detection uses `hasParent`
