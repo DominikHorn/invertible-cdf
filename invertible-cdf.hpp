@@ -6,8 +6,8 @@
 #include <optional>
 #include <vector>
 
-#include "include/rs/builder.h"
-#include "include/rs/radix_spline.h"
+#include "include/builder.hpp"
+#include "include/ts.hpp"
 
 namespace invertible_cdf {
 
@@ -29,7 +29,8 @@ struct Bounds {
 template <class Key, size_t max_error = 16>
 class InvertibleCDF {
   /// Cdf model, i.e., f(x)
-  _internal::RadixSpline<Key> rs_;
+  plex::PLEX<Key, size_t> key_to_pos_;
+  plex::PLEX<size_t, Key> pos_to_key_;
 
  public:
   /**
@@ -64,11 +65,20 @@ class InvertibleCDF {
     std::sort(keys.begin(), keys.end());
 
     // use RadixSpline's builder interface for construction
-    const auto min = keys.front();
-    const auto max = keys.back();
-    _internal::RadixSplineBuilder<Key> rsb(min, max, 1, max_error);
-    for (const auto &key : keys) rsb.AddKey(key);
-    rs_ = rsb.Finalize();
+    plex::Builder<Key, size_t> key_to_pos_builder(
+        {.x = keys.front(), .y = 0}, {.x = keys.back(), .y = keys.size() - 1},
+        max_error);
+    plex::Builder<size_t, Key> pos_to_key_builder(
+        {.x = 0, .y = keys.front()}, {.x = keys.size() - 1, .y = keys.back()},
+        max_error);
+
+    for (size_t pos = 0; pos < keys.size(); pos++) {
+      key_to_pos_builder.Add({.x = keys[pos], .y = pos});
+      pos_to_key_builder.Add({.x = pos, .y = keys[pos]});
+    }
+
+    key_to_pos_ = key_to_pos_builder.Finalize();
+    pos_to_key_ = pos_to_key_builder.Finalize();
   }
 
   /**
@@ -79,7 +89,7 @@ class InvertibleCDF {
    * @returns bounds for positiosn associated with `key`
    */
   Bounds<size_t> pos_for_key(const Key &key) const {
-    const auto search_bounds = rs_.GetSearchBound(key);
+    const auto search_bounds = key_to_pos_.GetSearchBound(key);
     return {.min = search_bounds.begin, .max = search_bounds.end};
   }
 
@@ -93,54 +103,8 @@ class InvertibleCDF {
    * by cdf. Otherwise `{ .min = Key::max(), .max = Key::max() }`
    */
   Bounds<Key> key_for_pos(const size_t &pos) const {
-    using KeyLims = std::numeric_limits<Key>;
-    using SegmentIter = typename decltype(rs_.spline_points_)::const_iterator;
-
-    // rename to enhance below code's readability
-    const auto &spline = rs_.spline_points_;
-
-    // min and max pos with error bound taken into account. Our true
-    // key could map to any position in this range -> we need to
-    // extrapolate from this raneg
-    const auto min_pos = pos - std::min(max_error, pos);
-    const auto max_pos =
-        pos + std::min(rs_.pos_table_.size() - 1 - pos, max_error);
-
-    // find first segment with seg.y <= pos and return it's key (x)
-    const auto min_seg = spline.begin() + rs_.pos_table_[min_pos];
-    const auto max_seg = spline.begin() + rs_.pos_table_[max_pos];
-
-    assert(min_seg >= spline.begin());
-    assert(min_seg < spline.end());
-    assert(max_seg >= spline.begin());
-    assert(max_seg < spline.end());
-    assert(min_seg <= max_seg);
-
-    // found segment for our pos
-    const auto inverted_fma = [](const SegmentIter &up, const SegmentIter &down,
-                                 const size_t p) {
-      const double slope = (up->y - down->y) / (up->x - down->x);
-      const double intercept = down->y;
-
-      // y = ax + b <-> x = (y-b)/a
-      // NOTE: x on slope is in local space and not global space, hence add
-      // prev_segment->x
-      return down->x + (static_cast<double>(p) - intercept) / slope;
-    };
-
-    const double pred_min =
-        std::floor(inverted_fma(min_seg + 1, min_seg, min_pos));
-
-    // key was never inserted during fit(), i.e., is 'beyond' our spline
-    if (max_seg + 1 >= spline.end()) {
-      return {.min = static_cast<Key>(pred_min), .max = KeyLims::max()};
-    }
-
-    const double pred_max =
-        std::ceil(inverted_fma(max_seg + 1, max_seg, max_pos));
-
-    return {.min = static_cast<Key>(pred_min),
-            .max = static_cast<Key>(pred_max)};
+    const auto search_bounds = pos_to_key_.GetSearchBound(pos);
+    return {.min = search_bounds.begin, .max = search_bounds.end};
   }
 
   /**
@@ -154,7 +118,7 @@ class InvertibleCDF {
    */
   friend bool operator==(const InvertibleCDF<Key> &a,
                          const InvertibleCDF<Key> &b) {
-    return a.rs_ == b.rs_;
+    return a.key_to_pos_ == b.key_to_pos_ && a.pos_to_key_ == b.pos_to_key_;
   }
 };
 }  // namespace invertible_cdf

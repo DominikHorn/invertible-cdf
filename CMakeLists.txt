@@ -11,6 +11,10 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
+# ==== Dependencies ====
+include(${PROJECT_SOURCE_DIR}/thirdparty/learned_hashing.cmake)
+target_link_libraries(${PROJECT_NAME} INTERFACE ${LEARNED_HASHING_LIBRARY})
+
 # Make IDE friendly
 target_sources(${PROJECT_NAME} INTERFACE invertible-cdf.hpp include/)
 

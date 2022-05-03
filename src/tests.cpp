@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <invertible-cdf.hpp>
-#include <iostream>
 #include <limits>
 #include <random>
 
@@ -25,7 +24,7 @@ std::vector<Key> generate_unsorted_dataset(size_t dataset_size,
 
   // distribute over entire key domain. Note that this might cause issues with
   // implementations that rely on sentinel values etc. Adress if necessary
-  std::uniform_int_distribution<Key> dist(KeyLims::min(), KeyLims::max());
+  std::uniform_int_distribution<Key> dist(KeyLims::min(), 1LLU << 57);
 
   // reserve + push_back appears to be the fastest way to achieve this
   std::vector<Key> res;
@@ -151,6 +150,17 @@ TEST(ICDF, KeyForPosBounds) {
   for (size_t i = 0; i < keys.size(); i++) {
     const auto& key = keys[i];
     const auto bounds = icdf.key_for_pos(i);
+
+    if (key < bounds.min) {
+      std::cout << "min delta: "
+                << std::max(bounds.min, key) - std::min(bounds.min, key)
+                << std::endl;
+    }
+    if (key > bounds.max) {
+      std::cout << "max delta: "
+                << std::max(bounds.max, key) - std::min(bounds.max, key)
+                << std::endl;
+    }
 
     EXPECT_LE(bounds.min, key);
     EXPECT_GE(bounds.max, key);
