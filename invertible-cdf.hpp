@@ -33,7 +33,7 @@ class InvertibleCDF {
 
  public:
   /**
-   * Construct without fitting the CDF right away. Use `fit()`
+   * Construct without fitting the CDF right away. Use `train()`
    * to build the model.
    */
   InvertibleCDF() noexcept = default;
@@ -47,7 +47,7 @@ class InvertibleCDF {
    */
   template <class It>
   InvertibleCDF(const It &begin, const It &end) {
-    fit(begin, end);
+    train(begin, end);
   }
 
   /**
@@ -58,7 +58,7 @@ class InvertibleCDF {
    * @param end past-the-end iterator for the sequence
    */
   template <class It>
-  void fit(const It &begin, const It &end) {
+  void train(const It &begin, const It &end) {
     // since we want to support arbitrarily ordered data we copy & sort
     std::vector<Key> keys(begin, end);
     std::sort(keys.begin(), keys.end());
@@ -131,7 +131,7 @@ class InvertibleCDF {
     const double pred_min =
         std::floor(inverted_fma(min_seg + 1, min_seg, min_pos));
 
-    // key was never inserted during fit(), i.e., is 'beyond' our spline
+    // key was never inserted during train(), i.e., is 'beyond' our spline
     if (max_seg + 1 >= spline.end()) {
       return {.min = static_cast<Key>(pred_min), .max = KeyLims::max()};
     }

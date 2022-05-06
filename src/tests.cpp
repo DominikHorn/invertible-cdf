@@ -57,7 +57,7 @@ TEST(ICDF, BuildReproducible) {
   // obtain a random test dataset
   auto keys = generate_sorted_dataset(test_dataset_size);
 
-  // don't fit() `a` right away
+  // don't train() `a` right away
   invertible_cdf::InvertibleCDF<Key> icdf_a;
   invertible_cdf::InvertibleCDF<Key> icdf_b(keys.begin(), keys.end());
 
@@ -65,13 +65,13 @@ TEST(ICDF, BuildReproducible) {
   EXPECT_NE(icdf_a, icdf_b);
 
   // only fit `a` now
-  icdf_a.fit(keys.begin(), keys.end());
+  icdf_a.train(keys.begin(), keys.end());
 
   // equality after construction
   EXPECT_EQ(icdf_a, icdf_b);
 
   // idempotency of construction
-  icdf_a.fit(keys.begin(), keys.end());
+  icdf_a.train(keys.begin(), keys.end());
   EXPECT_EQ(icdf_a, icdf_b);
 }
 
@@ -83,9 +83,9 @@ TEST(ICDF, Equality) {
 
   invertible_cdf::InvertibleCDF<Key> icdf_a, icdf_b, icdf_c;
 
-  icdf_a.fit(keys.begin(), keys.end());
-  icdf_b.fit(keys.begin(), keys.end());
-  icdf_c.fit(keys.begin(), keys.end());
+  icdf_a.train(keys.begin(), keys.end());
+  icdf_b.train(keys.begin(), keys.end());
+  icdf_c.train(keys.begin(), keys.end());
 
   // basic equality
   EXPECT_EQ(icdf_a, icdf_b);
@@ -107,12 +107,12 @@ TEST(ICDF, BuildUnsorted) {
 
   // index unsorted data
   invertible_cdf::InvertibleCDF<Key> unsorted_icdf;
-  unsorted_icdf.fit(keys.begin(), keys.end());
+  unsorted_icdf.train(keys.begin(), keys.end());
 
   // sort and index on sorted data
   std::sort(keys.begin(), keys.end());
   invertible_cdf::InvertibleCDF<Key> sorted_icdf;
-  sorted_icdf.fit(keys.begin(), keys.end());
+  sorted_icdf.train(keys.begin(), keys.end());
 
   // if everything is implemented correctly, unsorted_icdf
   // and sorted_icdf are identical
@@ -126,7 +126,7 @@ TEST(ICDF, PosForKey) {
 
   // index data
   invertible_cdf::InvertibleCDF<Key> icdf;
-  icdf.fit(keys.begin(), keys.end());
+  icdf.train(keys.begin(), keys.end());
 
   // invariant: For all keys, their search bound must contain them.
   for (size_t i = 0; i < keys.size(); i++) {
@@ -145,7 +145,7 @@ TEST(ICDF, KeyForPosBounds) {
 
   // index data
   invertible_cdf::InvertibleCDF<Key> icdf;
-  icdf.fit(keys.begin(), keys.end());
+  icdf.train(keys.begin(), keys.end());
 
   // invariant: For positions, their keys must map to them.
   for (size_t i = 0; i < keys.size(); i++) {
@@ -164,7 +164,7 @@ TEST(ICDF, KeyForPosMonotone) {
 
   // index data
   invertible_cdf::InvertibleCDF<Key> icdf;
-  icdf.fit(keys.begin(), keys.end());
+  icdf.train(keys.begin(), keys.end());
 
   // invariant: For positions, their keys must map to them.
   invertible_cdf::Bounds<Key> last_bounds{KeyLims::min(), KeyLims::min()};
