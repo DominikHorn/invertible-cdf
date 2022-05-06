@@ -17,7 +17,7 @@ namespace invertible_cdf::plex {
 // Builds a `TrieSpline`.
 template <class X, class Y>
 class Builder {
-  using Coord = Coord<X, Y>;
+  using Coord = Coord<X, double>;
 
  public:
   Builder(const Coord& min, const Coord& max, Y spline_max_error)
@@ -143,7 +143,8 @@ class Builder {
     ++curr_num_distinct_coords_;
 
     // Compute current `upper_y` and `lower_y`.
-    const auto lower_y = coord.y - std::min(coord.y, spline_max_error_);
+    const auto lower_y =
+        coord.y - std::min(coord.y, static_cast<double>(spline_max_error_));
     const auto upper_y = coord.y + spline_max_error_;
 
     if (curr_num_distinct_coords_ == 2) {

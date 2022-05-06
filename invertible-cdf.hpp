@@ -66,15 +66,17 @@ class InvertibleCDF {
 
     // use RadixSpline's builder interface for construction
     plex::Builder<Key, size_t> key_to_pos_builder(
-        {.x = keys.front(), .y = 0}, {.x = keys.back(), .y = keys.size() - 1},
+        {.x = keys.front(), .y = 0},
+        {.x = keys.back(), .y = static_cast<double>(keys.size() - 1)},
         max_error);
     plex::Builder<size_t, Key> pos_to_key_builder(
-        {.x = 0, .y = keys.front()}, {.x = keys.size() - 1, .y = keys.back()},
+        {.x = 0, .y = static_cast<double>(keys.front())},
+        {.x = keys.size() - 1, .y = static_cast<double>(keys.back())},
         max_error);
 
     for (size_t pos = 0; pos < keys.size(); pos++) {
-      key_to_pos_builder.Add({.x = keys[pos], .y = pos});
-      pos_to_key_builder.Add({.x = pos, .y = keys[pos]});
+      key_to_pos_builder.Add({.x = keys[pos], .y = static_cast<double>(pos)});
+      pos_to_key_builder.Add({.x = pos, .y = static_cast<double>(keys[pos])});
     }
 
     key_to_pos_ = key_to_pos_builder.Finalize();

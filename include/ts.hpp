@@ -13,7 +13,7 @@ namespace invertible_cdf::plex {
 // interpolation.
 template <class X, class Y>
 class PLEX {
-  using Coord = Coord<X, Y>;
+  using Coord = Coord<X, double>;
 
  public:
   PLEX() = default;
@@ -35,27 +35,31 @@ class PLEX {
 
     // Find spline segment with `key` ∈ (spline[index - 1], spline[index]].
     const size_t index = GetSplineSegment(x);
-    const Coord down = spline_points_[index - 1];
-    const Coord up = spline_points_[index];
-
-    // Compute slope.
+    Coord down = spline_points_[index - 1];
+    Coord up = spline_points_[index];
     assert(up.x >= down.x);
     assert(up.y >= down.y);
+    assert(x >= down.x);
+    assert(x <= up.x);
+
+    // Compute slope.
     const double x_diff = up.x - down.x;
     const double y_diff = up.y - down.y;
-    const double slope = y_diff / x_diff;
 
     // Interpolate.
-    const double key_diff = static_cast<double>(x) - static_cast<double>(down.x);
-    return std::fma(key_diff, slope, down.y);
+    return std::fma(x - down.x, y_diff / x_diff, down.y);
   }
 
   // Returns a search bound [begin, end) around the estimated position.
   SearchBound GetSearchBound(const X x) const {
     const size_t estimate = GetEstimatedY(x);
-    const size_t begin = estimate - std::min(static_cast<std::uint64_t>(estimate), static_cast<std::uint64_t>(spline_max_error_));
+    const size_t begin =
+        estimate - std::min(static_cast<std::uint64_t>(estimate),
+                            static_cast<std::uint64_t>(spline_max_error_));
     // `end` is exclusive.
-    const size_t end = estimate + std::min(static_cast<std::uint64_t>(max_.y - estimate), static_cast<std::uint64_t>(spline_max_error_));
+    const size_t end =
+        estimate + std::min(static_cast<std::uint64_t>(max_.y - estimate),
+                            static_cast<std::uint64_t>(spline_max_error_));
     return SearchBound{begin, end};
   }
 

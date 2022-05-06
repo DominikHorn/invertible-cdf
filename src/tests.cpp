@@ -24,7 +24,7 @@ std::vector<Key> generate_unsorted_dataset(size_t dataset_size,
 
   // distribute over entire key domain. Note that this might cause issues with
   // implementations that rely on sentinel values etc. Adress if necessary
-  std::uniform_int_distribution<Key> dist(KeyLims::min(), 1LLU << 57);
+  std::uniform_int_distribution<Key> dist(KeyLims::min(), KeyLims::max());
 
   // reserve + push_back appears to be the fastest way to achieve this
   std::vector<Key> res;
