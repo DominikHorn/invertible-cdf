@@ -152,8 +152,8 @@ class InvertibleCDF {
    * @returns true iff a and b match, defined as having exactly the same
    *          internal learned cdf parameters
    */
-  friend bool operator==(const InvertibleCDF<Key> &a,
-                         const InvertibleCDF<Key> &b) {
+  friend bool operator==(const InvertibleCDF<Key, max_error> &a,
+                         const InvertibleCDF<Key, max_error> &b) {
     return a.rs_ == b.rs_;
   }
 };
