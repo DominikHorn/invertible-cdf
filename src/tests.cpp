@@ -5,6 +5,8 @@
 #include <limits>
 #include <random>
 
+#include "support/datasets.hpp"
+
 const size_t test_dataset_size = 100'000;
 using Key = std::uint64_t;
 using KeyLims = std::numeric_limits<Key>;
@@ -151,20 +153,39 @@ TEST(ICDF, KeyForPosBounds) {
     const auto& key = keys[i];
     const auto bounds = icdf.key_for_pos(i);
 
-    if (key < bounds.min) {
-      std::cout << "min delta: "
-                << std::max(bounds.min, key) - std::min(bounds.min, key)
-                << std::endl;
-    }
-    if (key > bounds.max) {
-      std::cout << "max delta: "
-                << std::max(bounds.max, key) - std::min(bounds.max, key)
-                << std::endl;
-    }
+    EXPECT_LE(bounds.min, key);
+    EXPECT_GE(bounds.max, key);
+  }
+}
+
+/// Test obtaining keys for positions gives correct bounds on real datasets
+template <dataset::ID ds>
+static void test_keys_for_pos() {
+  std::cout << "TESTING " << dataset::name(ds) << std::endl;
+  // obtain a random test dataset
+  auto keys = dataset::load_cached(ds, test_dataset_size);
+
+  // index data
+  invertible_cdf::InvertibleCDF<Key> icdf;
+  icdf.fit(keys.begin(), keys.end());
+
+  // invariant: For positions, their keys must map to them.
+  for (size_t i = 0; i < keys.size(); i++) {
+    const auto& key = keys[i];
+    const auto bounds = icdf.key_for_pos(i);
 
     EXPECT_LE(bounds.min, key);
     EXPECT_GE(bounds.max, key);
   }
+}
+TEST(ICDF, KeyForPosBoundsRealData) {
+  std::cout << std::filesystem::current_path() << std::endl;
+  test_keys_for_pos<dataset::ID::SEQUENTIAL>();
+  test_keys_for_pos<dataset::ID::WIKI>();
+  test_keys_for_pos<dataset::ID::BOOKS>();
+  test_keys_for_pos<dataset::ID::FB>();
+  test_keys_for_pos<dataset::ID::OSM>();
+  test_keys_for_pos<dataset::ID::UNIFORM>();
 }
 
 /// Test that keys for pos are monotonically increasing
