@@ -59,6 +59,9 @@ class InvertibleCDF {
    */
   template <class It>
   void train(const It &begin, const It &end) {
+    if (std::distance(begin, end) == 0)
+      return;  // no train data -> nothing to do
+
     // since we want to support arbitrarily ordered data we copy & sort
     std::vector<Key> keys(begin, end);
     std::sort(keys.begin(), keys.end());
