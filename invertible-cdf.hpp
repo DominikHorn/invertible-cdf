@@ -161,5 +161,7 @@ class InvertibleCDF {
   }
 
   static std::string name() { return "InvertibleCDF"; }
+
+  size_t byte_size() const { return rs_.byte_size(); }
 };
 }  // namespace invertible_cdf

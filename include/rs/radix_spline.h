@@ -67,9 +67,11 @@ class RadixSpline {
   }
 
   // Returns the size in bytes.
-  size_t GetSize() const {
+  size_t byte_size() const {
     return sizeof(*this) + radix_table_.size() * sizeof(uint32_t) +
-           spline_points_.size() * sizeof(Coord<KeyType>);
+           spline_points_.size() * sizeof(Coord<KeyType>) +
+           pos_table_.size() *
+               sizeof(typename decltype(pos_table_)::value_type);
   }
 
   friend bool operator==(const RadixSpline<KeyType>& a,
