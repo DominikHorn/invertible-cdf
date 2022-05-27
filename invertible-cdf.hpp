@@ -159,5 +159,7 @@ class InvertibleCDF {
                          const InvertibleCDF<Key, max_error> &b) {
     return a.rs_ == b.rs_;
   }
+
+  static std::string name() { return "InvertibleCDF"; }
 };
 }  // namespace invertible_cdf
